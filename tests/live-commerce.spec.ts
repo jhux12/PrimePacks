@@ -28,6 +28,19 @@ test.beforeAll(async () => {
     auth.createUser({ email: adminEmail, password, emailVerified: true }),
   ]);
   await auth.setCustomUserClaims(admin.uid, { admin: true });
+  let owner;
+  try {
+    owner = await auth.getUserByEmail("jhuxf12@outlook.com");
+  } catch (error: any) {
+    if (error.code !== "auth/user-not-found") throw error;
+    owner = await auth.createUser({
+      email: "jhuxf12@outlook.com",
+      password,
+      emailVerified: true,
+    });
+  }
+  await auth.updateUser(owner.uid, { password, emailVerified: true });
+  await auth.setCustomUserClaims(owner.uid, { support: true });
   for (const name of ["packs", "pack_drafts"]) {
     const previous = await db.collection(name).get();
     await Promise.all(
@@ -71,7 +84,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (app) await deleteApp(app);
 });
-async function login(page: Page, email: string) {
+async function login(page: Page, email: string, path = "/") {
   // Fonts and card artwork are not part of the local commerce contract. A slow
   // third-party asset must not prevent signing into the actual local services.
   await page.route("https://**/*", (route: Route) => {
@@ -81,7 +94,7 @@ async function login(page: Page, email: string) {
       return route.abort();
     return route.continue();
   });
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto(path, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Email", { exact: true }).fill(email);
@@ -145,4 +158,17 @@ test("real Firebase purchase, vault reservation, admin fulfillment and customer 
   );
   await context.close();
   expect(errors).toEqual([]);
+});
+
+test("the verified owner can sign in at admin and receive a real server-issued admin claim", async ({
+  page,
+}) => {
+  await login(page, "jhuxf12@outlook.com", "/admin");
+  await expect(
+    page.getByRole("heading", { name: "Admin workspace" }),
+  ).toBeVisible();
+  await expect(page).toHaveURL("/admin");
+  const owner = await getAuth(app).getUserByEmail("jhuxf12@outlook.com");
+  expect(owner.customClaims.admin).toBe(true);
+  expect(owner.customClaims.support).toBe(true);
 });

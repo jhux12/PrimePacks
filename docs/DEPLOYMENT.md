@@ -45,6 +45,14 @@ Update the webhook signing secret to the endpoint-specific secret, then redeploy
 
 ## 3. Grant an administrator role
 
+`/admin` is the administrator entry point, including on a fresh page load. Deploy the updated functions and frontend first. The default `OWNER_ADMIN_EMAIL` is `jhuxf12@outlook.com`; sign up/sign in with that address and verify its email. The backend checks the verified token and the Firebase Auth account before granting the owner an admin claim, preserving unrelated claims, and restoring missing original pack records. Refreshing the token exposes the workspace without a manual UID lookup. An email string in a browser alone never grants access.
+
+The owner bootstrap is available only for the server-configured email. To disable it (including before permanently revoking owner access), set `OWNER_ADMIN_EMAIL` to an empty string and redeploy functions. If Firebase admin credentials are available on a trusted operator machine, the explicit equivalent grant is:
+
+```sh
+node scripts/admin-role.mjs YOUR_PROJECT_ID jhuxf12@outlook.com grant
+```
+
 Create an account and verify its email. On a trusted operator machine with Application Default Credentials and Firebase Authentication administrator permission:
 
 ```sh
@@ -53,7 +61,7 @@ node scripts/admin-role.mjs YOUR_PROJECT_ID USER_UID grant
 node scripts/admin-role.mjs YOUR_PROJECT_ID USER_UID revoke
 ```
 
-Sign out and sign in again after role changes. Grants preserve unrelated custom claims. There is no client-side admin password, secret logo click, public role-write document or email-based bypass. Do not grant roles to unverified or shared accounts.
+Sign out and sign in again after role changes. Grants preserve unrelated custom claims. There is no client-side admin password, secret logo click, public role-write document or unverified-email bypass. Do not grant roles to unverified or shared accounts.
 
 ## 4. Validate and deploy with purchases disabled
 
@@ -72,6 +80,8 @@ Build without `VITE_USE_EMULATORS=true`. Firebase Hosting serves the built SPA w
 Only named-database rules selected in `firebase.json` are deployed. The demo emulator config deliberately uses `(default)` in its isolated project and is never the production deploy config.
 
 ## 5. Catalog and fulfillment setup
+
+The fourteen original packs are visible immediately. Owner bootstrap or opening `/admin` as an authorized administrator restores missing server records, reuses valid legacy covers and card lists, and preserves existing published/archived records. Their stock starts at zero until verified; this does not mint inventory or enable purchases.
 
 Open Admin, choose templates or create packs, supply owned/licensed images, confirm card condition/grade and estimated values, set the price and item weights, and enter real allocated stock. Templates have zero stock and cannot be published until eligible items are stocked. Save drafts to review probabilities and expected value, then publish. Archived packs remain in the admin catalog and reject new purchases. Existing acquired card snapshots remain unchanged.
 

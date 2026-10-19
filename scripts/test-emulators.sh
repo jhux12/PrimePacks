@@ -14,6 +14,7 @@ FIRESTORE_DATABASE_ID=(default)
 COMMERCE_ENABLED=true
 SITE_URL=https://primepacks.example
 STORE_TERMS_URL=https://primepacks.example/terms
+OWNER_ADMIN_EMAIL=jhuxf12@outlook.com
 VARS
 cat > "$secret_fixture" <<'VARS'
 STRIPE_SECRET_KEY=sk_test_local_fixture_only

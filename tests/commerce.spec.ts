@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import originalPacks from "../functions/src/legacy-packs.json" with { type: "json" };
 const card = {
   id: "test-card",
   name: "Launch Charizard",
@@ -38,10 +39,18 @@ async function fixture(
   fail = false,
 ) {
   await page.addInitScript(
-    ({ role, pack }) => {
+    ({ role, pack, originals }) => {
       (window as any).__fixtureRole = role;
       (window as any).__data = {
-        packs: [pack],
+        packs: [
+          ...originals.map((p) => ({
+            ...p,
+            status: "archived",
+            version: 1,
+            items: p.items.map((i) => ({ ...i, stock: 0 })),
+          })),
+          pack,
+        ],
         pack_drafts: [],
         fulfillments: [],
         admin_audit: [],
@@ -51,7 +60,7 @@ async function fixture(
       };
       (window as any).__listeners = [];
     },
-    { role, pack },
+    { role, pack, originals: originalPacks },
   );
   await page.route("**/src/lib/firebase.ts", (route) =>
     route.fulfill({
@@ -229,4 +238,49 @@ test("shipping form requires a real address and reports backend failures", async
     "Shipping temporarily unavailable",
   );
   await expect(page.getByRole("dialog")).toBeVisible();
+});
+
+test("restores the original fourteen packs when the live collection is empty", async ({
+  page,
+}) => {
+  await fixture(page);
+  await page.evaluate(() => {
+    (window as any).__data.packs = [];
+    (window as any).__listeners.forEach((emit: () => void) => emit());
+  });
+  await expect(
+    page.getByRole("heading", { name: "Pokémon Starter Pack" }),
+  ).toBeVisible();
+  await expect(page.locator(".pack-tile")).toHaveCount(14);
+  await expect(
+    page.getByRole("button", { name: "Awaiting restock" }),
+  ).toHaveCount(14);
+});
+test("admin URL requires authentication and cannot grant a customer privileges", async ({
+  page,
+}) => {
+  await fixture(page, "member");
+  await page.goto("/admin");
+  await expect(
+    page.getByRole("heading", { name: "Admin sign in" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "This account does not currently have administrator access.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Admin workspace" }),
+  ).toHaveCount(0);
+});
+test("verified administrators can load the workspace directly at admin URL", async ({
+  page,
+}) => {
+  await fixture(page, "admin");
+  await page.goto("/admin");
+  await expect(
+    page.getByRole("heading", { name: "Admin workspace" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Close administration" }).click();
+  await expect(page).toHaveURL("/");
 });

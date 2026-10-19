@@ -5,13 +5,16 @@ const require = createRequire(
 );
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
-const [projectId, uid, action] = process.argv.slice(2);
-if (!projectId || !uid || !["grant", "revoke"].includes(action))
+const [projectId, identity, action] = process.argv.slice(2);
+if (!projectId || !identity || !["grant", "revoke"].includes(action))
   throw Error(
-    "Usage: node scripts/admin-role.mjs PROJECT_ID USER_UID grant|revoke",
+    "Usage: node scripts/admin-role.mjs PROJECT_ID USER_UID_OR_EMAIL grant|revoke",
   );
 initializeApp({ projectId });
-const user = await getAuth().getUser(uid);
+const user = identity.includes("@")
+  ? await getAuth().getUserByEmail(identity)
+  : await getAuth().getUser(identity);
+const uid = user.uid;
 if (action === "grant" && !user.emailVerified)
   throw Error("Administrator email must be verified");
 await getAuth().setCustomUserClaims(uid, {

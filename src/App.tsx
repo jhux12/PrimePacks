@@ -21,7 +21,12 @@ import {
   resetPassword,
 } from "./lib/firebase";
 import type { InventoryCard } from "./types";
-import { parsePack, money, errorMessage } from "./lib/catalog";
+import {
+  parsePack,
+  mergeOriginalPacks,
+  money,
+  errorMessage,
+} from "./lib/catalog";
 import type { ManagedPack } from "./lib/catalog";
 import { Storefront } from "./components/Storefront";
 import { AccountVault, Shipment } from "./components/AccountVault";
@@ -49,8 +54,10 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authReady, setAuthReady] = useState(false);
-  const [packs, setPacks] = useState<ManagedPack[]>([]);
-  const [catalogReady, setCatalogReady] = useState(false);
+  const [packs, setPacks] = useState<ManagedPack[]>(() =>
+    mergeOriginalPacks([]),
+  );
+  const [catalogReady, setCatalogReady] = useState(true);
   const [catalogError, setCatalogError] = useState("");
   const [wallet, setWallet] = useState({ balanceCents: 0, frozen: false });
   const [inventory, setInventory] = useState<InventoryCard[]>([]);
@@ -58,6 +65,22 @@ export default function App() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [tab, setTab] = useState<"packs" | "vault" | "account">("packs");
   const [adminOpen, setAdminOpen] = useState(false);
+  const [pathname, setPathname] = useState(location.pathname);
+  const adminRoute = pathname.replace(/\/$/, "") === "/admin";
+  const navigateAdmin = (open: boolean) => {
+    const path = open ? "/admin" : "/";
+    history.pushState({}, "", path);
+    setPathname(path);
+    setAdminOpen(open);
+  };
+  useEffect(() => {
+    const update = () => {
+      setPathname(location.pathname);
+      setAdminOpen(false);
+    };
+    window.addEventListener("popstate", update);
+    return () => window.removeEventListener("popstate", update);
+  }, []);
   const [modal, setModal] = useState<"auth" | "fund" | null>(null);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -80,7 +103,15 @@ export default function App() {
       setAuthReady(true);
       if (current) {
         try {
-          const token = await current.getIdTokenResult();
+          let token = await current.getIdTokenResult();
+          if (
+            token.claims.admin !== true &&
+            token.claims.email_verified === true &&
+            current.email?.toLowerCase() === "jhuxf12@outlook.com"
+          ) {
+            await callApi("bootstrapOwnerAdmin", {});
+            token = await current.getIdTokenResult(true);
+          }
           if (active && serial === generation)
             setIsAdmin(
               token.claims.admin === true &&
@@ -104,17 +135,19 @@ export default function App() {
         (snapshot) => {
           try {
             setPacks(
-              snapshot.docs.map((d) => {
-                const pack = parsePack(d.data());
-                if (pack.id !== d.id) throw Error("Catalog ID mismatch");
-                return pack;
-              }),
+              mergeOriginalPacks(
+                snapshot.docs.map((d) => {
+                  const pack = parsePack(d.data());
+                  if (pack.id !== d.id) throw Error("Catalog ID mismatch");
+                  return pack;
+                }),
+              ),
             );
             setCatalogError("");
           } catch {
-            setPacks([]);
+            setPacks(mergeOriginalPacks([]));
             setCatalogError(
-              "The catalog is temporarily unavailable. Please try again later.",
+              "Live catalog updates are unavailable. Showing the original collection with purchases paused.",
             );
           }
           setCatalogReady(true);
@@ -122,7 +155,7 @@ export default function App() {
         () => {
           setCatalogReady(true);
           setCatalogError(
-            "The catalog is temporarily unavailable. Please try again later.",
+            "Live catalog updates are unavailable. Showing the original collection with purchases paused.",
           );
         },
       ),
@@ -224,6 +257,19 @@ export default function App() {
     setModal(user ? "fund" : "auth");
   };
   useDialog(modal !== null, () => setModal(null), busy);
+  useEffect(() => {
+    if (!adminRoute || !isAdmin) return;
+    let active = true;
+    callApi("restoreLegacyCatalog", {}).catch(() => {
+      if (active)
+        setError(
+          "The previous saved pack edits could not be restored. Deploy the updated catalog functions and try /admin again.",
+        );
+    });
+    return () => {
+      active = false;
+    };
+  }, [adminRoute, isAdmin]);
   const published = packs.filter((p) => p.status === "published");
   return (
     <div className="commerce-app">
@@ -235,7 +281,10 @@ export default function App() {
         <button
           className="brand-button"
           aria-label="PrimePacks home"
-          onClick={() => setTab("packs")}
+          onClick={() => {
+            setTab("packs");
+            if (adminRoute) navigateAdmin(false);
+          }}
         >
           <PrimePacksLogo size="lg" glow={false} />
         </button>
@@ -243,7 +292,10 @@ export default function App() {
           {(["packs", "vault", "account"] as const).map((t) => (
             <button
               className={tab === t ? "active" : ""}
-              onClick={() => setTab(t)}
+              onClick={() => {
+                setTab(t);
+                if (adminRoute) navigateAdmin(false);
+              }}
               key={t}
             >
               {t === "vault"
@@ -251,7 +303,9 @@ export default function App() {
                 : t[0].toUpperCase() + t.slice(1)}
             </button>
           ))}
-          {isAdmin && <button onClick={() => setAdminOpen(true)}>Admin</button>}
+          {isAdmin && (
+            <button onClick={() => navigateAdmin(true)}>Admin</button>
+          )}
         </nav>
         <div className="header-actions">
           <button
@@ -302,14 +356,74 @@ export default function App() {
         </p>
       )}
       <main>
+        {catalogError && (
+          <p className="page-notice notice" role="status">
+            {catalogError}
+          </p>
+        )}
+        {adminRoute && !isAdmin && (
+          <section className="catalog-section">
+            <p className="eyebrow">PRIMEPACKS ADMINISTRATION</p>
+            <h1 className="page-title">Admin sign in</h1>
+            <p className="muted">
+              {!authReady
+                ? "Checking your account…"
+                : !user
+                  ? "Sign in with your administrator account to manage packs, odds and fulfillment."
+                  : !user.emailVerified
+                    ? "Verify your email address before accessing administration."
+                    : "This account does not currently have administrator access."}
+            </p>
+            {!user ? (
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setModal("auth");
+                  setError("");
+                }}
+              >
+                Sign in to admin
+              </button>
+            ) : (
+              <div className="button-row">
+                <button
+                  className="secondary-button"
+                  onClick={() => {
+                    setTab("account");
+                    navigateAdmin(false);
+                  }}
+                >
+                  Manage account
+                </button>
+                {user.email?.toLowerCase() === "jhuxf12@outlook.com" &&
+                  user.emailVerified && (
+                    <button
+                      className="primary-button"
+                      disabled={busy}
+                      onClick={() =>
+                        run(async () => {
+                          await callApi("bootstrapOwnerAdmin", {});
+                          await user.getIdToken(true);
+                          setIsAdmin(
+                            (await user.getIdTokenResult()).claims.admin ===
+                              true,
+                          );
+                        })
+                      }
+                    >
+                      Set up owner access
+                    </button>
+                  )}
+              </div>
+            )}
+          </section>
+        )}
+
         {tab === "packs" &&
+          !adminRoute &&
           (!catalogReady ? (
             <div className="empty-state" role="status">
               Loading the collection…
-            </div>
-          ) : catalogError ? (
-            <div className="empty-state" role="alert">
-              {catalogError}
             </div>
           ) : (
             <Storefront
@@ -638,7 +752,7 @@ export default function App() {
           </section>
         </div>
       )}
-      {adminOpen && isAdmin && (
+      {(adminOpen || adminRoute) && isAdmin && (
         <Suspense
           fallback={
             <div className="modal-backdrop">
@@ -646,7 +760,7 @@ export default function App() {
             </div>
           }
         >
-          <AdminPanelModal packs={packs} onClose={() => setAdminOpen(false)} />
+          <AdminPanelModal packs={packs} onClose={() => navigateAdmin(false)} />
         </Suspense>
       )}
     </div>

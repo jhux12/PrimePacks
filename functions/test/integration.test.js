@@ -4,15 +4,16 @@ import { initializeApp, deleteApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import Stripe from "stripe";
+import originals from "../src/legacy-packs.json" with { type: "json" };
 import { randomUUID } from "node:crypto";
 const projectId = "demo-primepacks";
 const app = initializeApp({ projectId }),
   store = getFirestore(app),
   auth = getAuth(app);
 let member, staff, other;
-async function identity(admin = false) {
+async function identity(admin = false, emailOverride) {
   const id = randomUUID(),
-    email = `${id}@example.com`,
+    email = emailOverride || `${id}@example.com`,
     password = "Local-test-password-123";
   const user = await auth.createUser({ email, password, emailVerified: true });
   if (admin) await auth.setCustomUserClaims(user.uid, { admin: true });
@@ -456,4 +457,44 @@ test("out-of-stock packs cannot award nonexistent physical cards", async () => {
     staff,
   );
   await assert.rejects(open(), /unavailable/);
+});
+
+test("only the verified configured owner can bootstrap admin and restore missing legacy packs", async () => {
+  await assert.rejects(call("bootstrapOwnerAdmin", {}), /configured owner/);
+  await assert.rejects(call("restoreLegacyCatalog", {}), /Administrator/);
+  const owner = await identity(false, "jhuxf12@outlook.com");
+  await auth.setCustomUserClaims(owner.uid, { support: true });
+  await auth.updateUser(owner.uid, { emailVerified: false });
+  await assert.rejects(call("bootstrapOwnerAdmin", {}, owner), /Verify/);
+  await auth.updateUser(owner.uid, { emailVerified: true });
+  const first = originals[0],
+    second = originals[1];
+  await store.doc(`pack_customizations/${first.id}`).set({
+    packId: first.id,
+    imageUrl: "https://example.com/legacy-cover.png",
+  });
+  await store
+    .doc(`pack_items/${first.id}`)
+    .set({ packId: first.id, items: [card] });
+  await store.doc(`packs/${second.id}`).set({
+    ...second,
+    status: "archived",
+    version: 42,
+    items: second.items.map((i) => ({ ...i, stock: 5 })),
+  });
+  const result = await call("bootstrapOwnerAdmin", {}, owner);
+  assert.equal(result.granted, true);
+  assert.equal(result.restored, originals.length - 1);
+  const user = await auth.getUser(owner.uid);
+  assert.equal(user.customClaims.admin, true);
+  assert.equal(user.customClaims.support, true);
+  const restored = (await store.doc(`packs/${first.id}`).get()).data();
+  assert.equal(restored.packCoverUrl, "https://example.com/legacy-cover.png");
+  assert.equal(restored.items[0].id, card.id);
+  assert.equal(restored.items[0].stock, 0);
+  const preserved = (await store.doc(`packs/${second.id}`).get()).data();
+  assert.equal(preserved.status, "archived");
+  assert.equal(preserved.version, 42);
+  const again = await call("bootstrapOwnerAdmin", {}, owner);
+  assert.equal(again.restored, 0);
 });

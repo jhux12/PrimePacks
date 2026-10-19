@@ -9,6 +9,7 @@ import {
 } from "firebase-functions/params";
 import { randomBytes, randomUUID } from "node:crypto";
 import Stripe from "stripe";
+import legacyPacks from "./legacy-packs.json" with { type: "json" };
 import {
   ID,
   check,
@@ -33,6 +34,9 @@ const termsUrl = defineString("STORE_TERMS_URL", {
   default: "https://example.invalid/terms",
 });
 const enabled = defineBoolean("COMMERCE_ENABLED", { default: false });
+const ownerEmail = defineString("OWNER_ADMIN_EMAIL", {
+  default: "jhuxf12@outlook.com",
+});
 const stripeKey = defineSecret("STRIPE_SECRET_KEY");
 const webhookKey = defineSecret("STRIPE_WEBHOOK_SECRET");
 const db = () => getFirestore(database.value());
@@ -88,6 +92,91 @@ const audit = (tx, actor, action, target, details) =>
     details,
     createdAt: stamp(),
   });
+
+async function restoreOriginalPacks(uid) {
+  let restored = 0;
+  for (const original of legacyPacks) {
+    await db()
+      .runTransaction(async (tx) => {
+        const target = db().doc(`packs/${original.id}`);
+        const [existing, cover, contents] = await Promise.all([
+          tx.get(target),
+          tx.get(db().doc(`pack_customizations/${original.id}`)),
+          tx.get(db().doc(`pack_items/${original.id}`)),
+        ]);
+        if (existing.exists) return;
+        let pack = validatePack(original);
+        if (cover.data()?.imageUrl) {
+          try {
+            pack = validatePack({
+              ...pack,
+              packCoverUrl: cover.data().imageUrl,
+            });
+          } catch {
+            /* Preserve valid original artwork if a legacy URL is invalid. */
+          }
+        }
+        if (contents.data()?.items?.length) {
+          try {
+            pack = validatePack({ ...pack, items: contents.data().items });
+          } catch {
+            /* Invalid legacy data must not break the original catalog. */
+          }
+        }
+        tx.create(target, {
+          ...pack,
+          items: pack.items.map((item) => ({ ...item, stock: 0 })),
+          status: "published",
+          version: 1,
+          updatedAt: stamp(),
+          updatedBy: uid,
+        });
+        audit(tx, uid, "pack.restored", original.id, {
+          source: "original-catalog",
+          stockVerified: false,
+        });
+        return true;
+      })
+      .then((created) => {
+        if (created) restored++;
+      });
+  }
+  return restored;
+}
+
+export const restoreLegacyCatalog = wrap(async ({ auth }) => {
+  const uid = requireAdmin(auth);
+  return { restored: await restoreOriginalPacks(uid) };
+});
+
+export const bootstrapOwnerAdmin = wrap(async ({ auth }) => {
+  const uid = requireMember(auth);
+  const configured = ownerEmail.value().trim().toLowerCase();
+  check(
+    configured.length > 0 && auth.token.email?.toLowerCase() === configured,
+    "This account is not the configured owner",
+  );
+  const account = await getAuth().getUser(uid);
+  check(
+    !account.disabled &&
+      account.emailVerified &&
+      account.email?.toLowerCase() === configured,
+    "Verify the configured owner email before requesting access",
+  );
+  if (account.customClaims?.admin !== true) {
+    await db().collection("admin_audit").add({
+      actor: uid,
+      action: "admin.owner_grant_requested",
+      target: uid,
+      createdAt: stamp(),
+    });
+    await getAuth().setCustomUserClaims(uid, {
+      ...account.customClaims,
+      admin: true,
+    });
+  }
+  return { granted: true, restored: await restoreOriginalPacks(uid) };
+});
 
 export const managePack = wrap(async ({ auth, data }) => {
   const uid = requireAdmin(auth);

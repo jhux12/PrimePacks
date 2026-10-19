@@ -12,7 +12,7 @@ npm ci --prefix functions
 bun run dev
 ```
 
-The frontend runs on port 3000. Public Firebase project settings are in `firebase-applet-config.json`; these are not administrator credentials. No payment secrets belong in the frontend or in `VITE_*` variables. An empty new catalog is intentional: templates do not represent available physical inventory.
+The frontend runs on port 3000. Public Firebase project settings are in `firebase-applet-config.json`; these are not administrator credentials. No payment secrets belong in the frontend or in `VITE_*` variables. The fourteen original packs remain visible as a baseline when the new catalog is empty or unavailable. Existing published records override that baseline, including archived packs. Restored packs start with zero verified physical stock; browsing does not imply that purchases are enabled.
 
 ```sh
 bun run lint                  # TypeScript
@@ -32,7 +32,9 @@ See [deployment and launch validation](docs/DEPLOYMENT.md) and [architecture and
 
 ## Admin operations
 
-Only verified users with a server-issued Firebase `admin: true` custom claim see the Admin button. A privileged operator grants or revokes that role with `scripts/admin-role.mjs`; neither an email allowlist nor a browser switch grants access.
+Open `/admin` directly, or use the Admin button after authorization. Verified users need a server-issued Firebase `admin: true` custom claim. The configured owner, `jhuxf12@outlook.com`, can bootstrap that claim after signing in with a verified email: the backend checks both the authenticated token and the current Firebase Auth record. Other accounts cannot self-promote. A privileged operator can also grant/revoke roles by UID or email using `scripts/admin-role.mjs`. Set `OWNER_ADMIN_EMAIL` to an empty value to disable owner self-bootstrap before permanently revoking the owner role.
+
+Opening `/admin` as an administrator restores missing original catalog records and their valid legacy `pack_customizations` / `pack_items` settings. This operation is idempotent, audited, preserves all existing records (including archives), and never invents physical stock. The default owner bootstrap also restores those records.
 
 - **Packs & odds:** create packs; edit names, descriptions, categories, pricing, artwork, cards, stock, and relative weights; save private drafts; publish or archive. Templates start with zero physical stock. Custom card data can be edited as JSON and is validated on the server.
 - **Fulfillment:** view private delivery addresses, enter carrier/tracking, dispatch, or cancel pending requests to return a card to the vault.

@@ -1,9 +1,29 @@
 import type { Pack } from "../types";
 import { validatePack } from "../../functions/src/domain.js";
+import legacyPacks from "../../functions/src/legacy-packs.json" with { type: "json" };
 export interface ManagedPack extends Pack {
   status: "published" | "archived";
   version: number;
   items: (Pack["items"][number] & { stock: number })[];
+}
+export function mergeOriginalPacks(published: ManagedPack[]): ManagedPack[] {
+  const overrides = new Map(published.map((pack) => [pack.id, pack]));
+  const original = legacyPacks.map(
+    (pack) =>
+      overrides.get(pack.id) ||
+      ({
+        ...pack,
+        status: "published",
+        version: 0,
+        items: pack.items.map((item) => ({ ...item, stock: 0 })),
+      } as ManagedPack),
+  );
+  return [
+    ...original,
+    ...published.filter(
+      (pack) => !legacyPacks.some((original) => original.id === pack.id),
+    ),
+  ];
 }
 export function parsePack(data: unknown): ManagedPack {
   const raw = data as ManagedPack;
