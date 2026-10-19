@@ -1,0 +1,13 @@
+{
+  "functions": [
+    { "source": "functions", "codebase": "primepacks", "runtime": "nodejs22" }
+  ],
+  "firestore": { "rules": "firestore.rules" },
+  "emulators": {
+    "firestore": { "port": 8080 },
+    "auth": { "port": 9099 },
+    "functions": { "port": 5001 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

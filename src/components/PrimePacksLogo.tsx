@@ -23,7 +23,7 @@ export const PrimePacksLogo: React.FC<PrimePacksLogoProps> = ({
   }[size];
 
   // Neon green color code from official logo
-  const neonGreen = '#00F076';
+  const neonGreen = '#e0bb64';
 
   if (variant === 'icon') {
     return (
@@ -100,7 +100,7 @@ export const PrimePacksLogo: React.FC<PrimePacksLogoProps> = ({
           className="ml-1 text-lg sm:text-xl font-black"
           style={{
             color: neonGreen,
-            textShadow: glow ? `0 0 16px rgba(0, 240, 118, 0.65)` : undefined
+            textShadow: glow ? `0 0 16px rgba(224, 187, 100, 0.35)` : undefined
           }}
         >
           PACKS

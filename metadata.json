@@ -1,6 +1,6 @@
 {
-  "name": "CrownCards - Mystery Pack Opening & Battles",
-  "description": "Premier mystery card pack opening platform. Rip vintage & modern Pokemon & sports packs, compete in live Pack Battles, upgrade cards in the Vault, and verify provably fair odds.",
+  "name": "PrimePacks | Your Next Prime Pull",
+  "description": "Collectible card packs with published odds, secure checkout, an account vault and tracked US fulfillment.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
