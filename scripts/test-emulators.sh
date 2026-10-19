@@ -29,8 +29,8 @@ if [[ "${PRIMEPACKS_EXTERNAL_FIRESTORE:-0}" == 1 ]]; then
   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
   emulators=auth,functions
 fi
-command='node --import tsx --test tests/firestore.test.ts && node --test functions/test/integration.test.js && node_modules/.bin/playwright test --config playwright.integration.config.ts'
+command='node scripts/run-emulator-tests.mjs'
 if [[ "${1:-}" == --browser-only ]]; then
-  command='node_modules/.bin/playwright test --config playwright.integration.config.ts'
+  command='node scripts/run-emulator-tests.mjs --browser-only'
 fi
 node_modules/.bin/firebase emulators:exec --config firebase.test.json --project demo-primepacks --only "$emulators" "$command"

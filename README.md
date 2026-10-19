@@ -24,6 +24,8 @@ bun run test:e2e               # Desktop/mobile interface tests using stubbed tr
 bun run build
 ```
 
+On emulator-test failure, the runner names the failed stage and saves its full output under `test-artifacts/emulators/`. CI uploads those logs, browser screenshots, and traces in the `browser-test-results` artifact.
+
 Browser tests deliberately stub transport; they do not establish payment settlement or backend security. The emulator tests, including the real purchase-to-tracking browser flow, use an isolated `demo-primepacks` project and local fixture signing keys; they never call live Stripe. The runner refuses to overwrite an existing emulator config or local secret file. Firebase emulator downloads need `storage.googleapis.com`. `PRIMEPACKS_EXTERNAL_FIRESTORE=1` can use an already-running, verified official Firestore emulator at `127.0.0.1:8080` while Firebase CLI runs Auth and Functions.
 
 See [deployment and launch validation](docs/DEPLOYMENT.md) and [architecture and invariants](docs/ARCHITECTURE.md).

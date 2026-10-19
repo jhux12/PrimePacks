@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 import { createRequire } from "node:module";
 import { randomUUID } from "node:crypto";
 const require = createRequire(
@@ -72,7 +72,16 @@ test.afterAll(async () => {
   if (app) await deleteApp(app);
 });
 async function login(page: Page, email: string) {
-  await page.goto("/");
+  // Fonts and card artwork are not part of the local commerce contract. A slow
+  // third-party asset must not prevent signing into the actual local services.
+  await page.route("https://**/*", (route: Route) => {
+    if (
+      ["image", "font", "stylesheet"].includes(route.request().resourceType())
+    )
+      return route.abort();
+    return route.continue();
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Email", { exact: true }).fill(email);

@@ -24,7 +24,8 @@ export function useDialog(open: boolean, onClose: () => void, busy = false) {
         ),
       ].filter((el) => el.getClientRects().length > 0);
     dialog.tabIndex = -1;
-    (focusable()[0] || dialog).focus();
+    // Focusing a fixed overlay must not start a smooth scroll on the locked page.
+    (focusable()[0] || dialog).focus({ preventScroll: true });
     const key = (event: KeyboardEvent) => {
       if ([...document.querySelectorAll('[role="dialog"]')].at(-1) !== dialog)
         return;
@@ -58,7 +59,7 @@ export function useDialog(open: boolean, onClose: () => void, busy = false) {
     return () => {
       document.removeEventListener("keydown", key);
       if (--locks === 0) document.body.style.overflow = previousOverflow;
-      previous?.focus();
+      previous?.focus({ preventScroll: true });
     };
   }, [open]);
 }

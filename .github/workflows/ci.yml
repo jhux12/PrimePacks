@@ -35,4 +35,6 @@ jobs:
         if: failure()
         with:
           name: browser-test-results
-          path: test-results/
+          path: |
+            test-results/
+            test-artifacts/emulators/
