@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: default-deny all paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidPackCustomization(data) {
+      return data.keys().hasAll(['packId', 'imageUrl']) &&
+        data.keys().hasOnly(['packId', 'imageUrl', 'updatedAt']) &&
+        data.packId is string && data.packId.size() >= 1 && data.packId.size() <= 64 &&
+        data.packId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.imageUrl is string && data.imageUrl.size() >= 8 && data.imageUrl.size() <= 2048;
+    }
+
+    function isValidPackItemsConfig(data) {
+      return data.keys().hasAll(['packId', 'items']) &&
+        data.packId is string && data.packId.size() >= 1 && data.packId.size() <= 64 &&
+        data.packId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.items is list;
+    }
+
+    // Public mystery pack customizations (visible across all devices)
+    match /pack_customizations/{packId} {
+      allow read: if true;
+      allow create, update: if isValidId(packId) &&
+                              request.resource.data.packId == packId &&
+                              isValidPackCustomization(request.resource.data);
+      allow delete: if isValidId(packId);
+    }
+
+    // Public mystery pack custom card items (visible across all devices)
+    match /pack_items/{packId} {
+      allow read: if true;
+      allow create, update: if isValidId(packId) &&
+                              request.resource.data.packId == packId &&
+                              isValidPackItemsConfig(request.resource.data);
+      allow delete: if isValidId(packId);
+    }
+
+    // User profile & stats records
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if isValidId(userId);
+      allow delete: if isValidId(userId);
+    }
+  }
+}

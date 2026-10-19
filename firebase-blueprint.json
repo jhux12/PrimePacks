@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "PackCustomization": {
+      "title": "PackCustomization",
+      "description": "Custom cover image configuration for a mystery pack",
+      "type": "object",
+      "properties": {
+        "packId": {
+          "type": "string",
+          "description": "Unique identifier of the mystery pack",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Valid URL of the custom pack cover image",
+          "minLength": 8,
+          "maxLength": 2048
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the image was last updated"
+        }
+      },
+      "required": [
+        "packId",
+        "imageUrl"
+      ]
+    },
+    "PackItemsConfig": {
+      "title": "PackItemsConfig",
+      "description": "Custom card items contained in a mystery pack",
+      "type": "object",
+      "properties": {
+        "packId": {
+          "type": "string",
+          "description": "Unique identifier of the mystery pack",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "items": {
+          "type": "array",
+          "description": "List of card items contained in this pack"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when pack items were last updated"
+        }
+      },
+      "required": [
+        "packId",
+        "items"
+      ]
+    }
+  },
+  "firestore": {
+    "/pack_customizations/{packId}": {
+      "schema": "PackCustomization",
+      "description": "Stores custom pack cover image URLs keyed by packId"
+    },
+    "/pack_items/{packId}": {
+      "schema": "PackItemsConfig",
+      "description": "Stores custom card items contained in a pack keyed by packId"
+    }
+  }
+}
