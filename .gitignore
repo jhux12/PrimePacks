@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+.secret.local
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+test-results/
+playwright-report/
+test-artifacts/

@@ -10,7 +10,7 @@ export interface CardItem {
   year: string;
   rarity: CardRarity;
   grade: CardGrade;
-  value: number; // in CC (Crown Coins)
+  value: number; // Listed USD value; sellback is store credit.
   usdValue: number; // estimated market USD
   imageUrl: string;
   category: CardCategory;
@@ -23,7 +23,7 @@ export interface Pack {
   name: string;
   slug: string;
   description: string;
-  price: number; // in CC
+  price: number; // USD
   category: CardCategory | 'all';
   tier: 'budget' | 'standard' | 'high_roller' | 'whale';
   colorAccent: string;
@@ -34,6 +34,8 @@ export interface Pack {
 
 export interface InventoryCard {
   instanceId: string;
+  status?: 'available' | 'sold' | 'shipping_requested' | 'shipped';
+  carrier?: string;
   card: CardItem;
   pulledAt: number;
   packName: string;

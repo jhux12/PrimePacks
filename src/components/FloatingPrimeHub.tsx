@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
-import { playHapticTap, playCoinClink } from '../utils/sound';
+import React, { useState } from "react";
+import {
+  playHapticTap,
+  playCoinClink,
+  toggleSound as toggleAudio,
+  isSoundEnabled,
+} from "../utils/sound";
 import {
   Sparkles,
   ShieldCheck,
@@ -14,15 +19,15 @@ import {
   Zap,
   TrendingUp,
   Crown,
-  Check
-} from 'lucide-react';
+  Check,
+} from "lucide-react";
 
 export interface CategoryOption {
   id: string;
   label: string;
   subtitle: string;
   count: number;
-  iconName: 'all' | 'pokemon' | 'sports' | 'vintage' | 'whales';
+  iconName: "all" | "pokemon" | "sports" | "vintage" | "whales";
 }
 
 interface FloatingPrimeHubProps {
@@ -42,7 +47,7 @@ interface FloatingPrimeHubProps {
 
 export const FloatingPrimeHub: React.FC<FloatingPrimeHubProps> = ({
   balance,
-  activeCategory = 'all',
+  activeCategory = "all",
   onSelectCategory,
   categories,
   onNavigateToStore,
@@ -52,41 +57,63 @@ export const FloatingPrimeHub: React.FC<FloatingPrimeHubProps> = ({
   onOpenDailyRewards,
   onOpenProvablyFair,
   onOpenVault,
-  vaultCount
+  vaultCount,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
-  const toggleSound = () => {
-    playHapticTap();
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    if (typeof window !== 'undefined') {
-      (window as unknown as { __SOUND_MUTED__?: boolean }).__SOUND_MUTED__ = !next;
-    }
-  };
+  const [soundEnabled, setSoundEnabled] = useState(isSoundEnabled);
+  const toggleSound = () => setSoundEnabled(toggleAudio());
 
   const defaultCategories: CategoryOption[] = [
-    { id: 'all', label: 'All Collections', subtitle: 'Browse all mystery packs', count: 7, iconName: 'all' },
-    { id: 'pokemon', label: 'Pokémon TCG', subtitle: 'Scarlet & Violet, 151, Japanese', count: 3, iconName: 'pokemon' },
-    { id: 'sports', label: 'Sports & Kabooms', subtitle: 'NBA, NFL, Prizm & Downtown', count: 2, iconName: 'sports' },
-    { id: 'vintage', label: 'Vintage Grails', subtitle: '1st Edition Base Set & Relics', count: 1, iconName: 'vintage' },
-    { id: 'whales', label: 'High Roller & Whales', subtitle: '$1,000+ Legendary Grails', count: 1, iconName: 'whales' }
+    {
+      id: "all",
+      label: "All Collections",
+      subtitle: "Browse all mystery packs",
+      count: 7,
+      iconName: "all",
+    },
+    {
+      id: "pokemon",
+      label: "Pokémon TCG",
+      subtitle: "Scarlet & Violet, 151, Japanese",
+      count: 3,
+      iconName: "pokemon",
+    },
+    {
+      id: "sports",
+      label: "Sports & Kabooms",
+      subtitle: "NBA, NFL, Prizm & Downtown",
+      count: 2,
+      iconName: "sports",
+    },
+    {
+      id: "vintage",
+      label: "Vintage Grails",
+      subtitle: "1st Edition Base Set & Relics",
+      count: 1,
+      iconName: "vintage",
+    },
+    {
+      id: "whales",
+      label: "High Roller & Whales",
+      subtitle: "$1,000+ Legendary Grails",
+      count: 1,
+      iconName: "whales",
+    },
   ];
 
   const categoryList = categories || defaultCategories;
 
   const renderCategoryIcon = (iconName: string) => {
     switch (iconName) {
-      case 'pokemon':
+      case "pokemon":
         return <Zap className="w-4 h-4 text-amber-400" />;
-      case 'sports':
+      case "sports":
         return <TrendingUp className="w-4 h-4 text-cyan-400" />;
-      case 'vintage':
+      case "vintage":
         return <Crown className="w-4 h-4 text-purple-400" />;
-      case 'whales':
+      case "whales":
         return <Flame className="w-4 h-4 text-pink-400" />;
-      case 'all':
+      case "all":
       default:
         return <Layers className="w-4 h-4 text-[#00F076]" />;
     }
@@ -94,17 +121,17 @@ export const FloatingPrimeHub: React.FC<FloatingPrimeHubProps> = ({
 
   const getActiveLabel = () => {
     switch (activeCategory) {
-      case 'pokemon':
-        return 'POKÉMON';
-      case 'sports':
-        return 'SPORTS';
-      case 'vintage':
-        return 'VINTAGE';
-      case 'whales':
-        return 'WHALES';
-      case 'all':
+      case "pokemon":
+        return "POKÉMON";
+      case "sports":
+        return "SPORTS";
+      case "vintage":
+        return "VINTAGE";
+      case "whales":
+        return "WHALES";
+      case "all":
       default:
-        return 'ALL PACKS';
+        return "ALL PACKS";
     }
   };
 
@@ -157,19 +184,25 @@ export const FloatingPrimeHub: React.FC<FloatingPrimeHubProps> = ({
                     }}
                     className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all active:scale-98 cursor-pointer ${
                       isSelected
-                        ? 'bg-gradient-to-r from-[#00F076]/20 via-[#00F076]/10 to-transparent border-[#00F076] shadow-[0_0_15px_rgba(0,240,118,0.25)]'
-                        : 'bg-slate-900/80 border-white/5 hover:border-slate-700 hover:bg-slate-800/60'
+                        ? "bg-gradient-to-r from-[#00F076]/20 via-[#00F076]/10 to-transparent border-[#00F076] shadow-[0_0_15px_rgba(0,240,118,0.25)]"
+                        : "bg-slate-900/80 border-white/5 hover:border-slate-700 hover:bg-slate-800/60"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                        isSelected ? 'bg-[#00F076]/25 border-[#00F076]/60' : 'bg-slate-800 border-white/10'
-                      }`}>
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                          isSelected
+                            ? "bg-[#00F076]/25 border-[#00F076]/60"
+                            : "bg-slate-800 border-white/10"
+                        }`}
+                      >
                         {renderCategoryIcon(cat.iconName)}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className={`font-display font-bold text-xs ${isSelected ? 'text-[#00F076]' : 'text-white'}`}>
+                          <span
+                            className={`font-display font-bold text-xs ${isSelected ? "text-[#00F076]" : "text-white"}`}
+                          >
                             {cat.label}
                           </span>
                         </div>
@@ -206,18 +239,18 @@ export const FloatingPrimeHub: React.FC<FloatingPrimeHubProps> = ({
                 className="py-1.5 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
               >
                 <Coins className="w-3.5 h-3.5 text-[#00F076]" />
-                <span>+ $100 Faucet</span>
+                <span>Add store credit</span>
               </button>
 
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  onOpenProvablyFair();
+                  toggleSound();
                 }}
                 className="py-1.5 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Provably Fair</span>
+                <span>{soundEnabled ? "Mute sound" : "Enable sound"}</span>
               </button>
 
               {onNavigateToBattles && (
@@ -259,8 +292,8 @@ export const FloatingPrimeHub: React.FC<FloatingPrimeHubProps> = ({
           }}
           className={`relative group w-12 h-12 sm:w-14 sm:h-14 rounded-full p-1 flex items-center justify-center transition-all duration-300 shadow-2xl active:scale-95 cursor-pointer order-1 sm:order-2 ${
             isOpen
-              ? 'bg-[#00F076] rotate-90 shadow-[0_0_25px_rgba(0,240,118,0.8)]'
-              : 'bg-gradient-to-br from-[#0c1424] via-[#080d19] to-[#04070e] border-2 border-[#00F076]/80 hover:border-[#00F076] shadow-[0_0_20px_rgba(0,240,118,0.5)] hover:shadow-[0_0_30px_rgba(0,240,118,0.8)]'
+              ? "bg-[#00F076] rotate-90 shadow-[0_0_25px_rgba(0,240,118,0.8)]"
+              : "bg-gradient-to-br from-[#0c1424] via-[#080d19] to-[#04070e] border-2 border-[#00F076]/80 hover:border-[#00F076] shadow-[0_0_20px_rgba(0,240,118,0.5)] hover:shadow-[0_0_30px_rgba(0,240,118,0.8)]"
           }`}
           title="Change Pack Category"
           aria-label="Change Pack Category"

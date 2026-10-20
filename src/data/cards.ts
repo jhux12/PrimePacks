@@ -711,7 +711,7 @@ export const PACKS: Pack[] = [
     tier: 'budget',
     colorAccent: '#10B981',
     badgeText: '$1 ENTRY',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'starter-pikachu-holo')!,
       ALL_CARDS.find(c => c.id === 'charmander-ar-151')!,
@@ -731,7 +731,7 @@ export const PACKS: Pack[] = [
     tier: 'budget',
     colorAccent: '#A855F7',
     badgeText: '1000x SELECT',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'charizard-1st-ed-psa10')!,
       ALL_CARDS.find(c => c.id === 'charizard-ex-151-sir-psa10')!,
@@ -755,7 +755,7 @@ export const PACKS: Pack[] = [
     tier: 'budget',
     colorAccent: '#06B6D4',
     badgeText: '$5 HOT VALUE',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'cj-stroud-prizm-silver')!,
       ALL_CARDS.find(c => c.id === 'elly-de-la-cruz-bowman')!,
@@ -776,7 +776,7 @@ export const PACKS: Pack[] = [
     tier: 'budget',
     colorAccent: '#3B82F6',
     badgeText: '$15 STARTER',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'charizard-ex-151-sir-psa10')!,
       ALL_CARDS.find(c => c.id === 'blastoise-ex-151-sir')!,
@@ -800,7 +800,7 @@ export const PACKS: Pack[] = [
     tier: 'budget',
     colorAccent: '#14B8A6',
     badgeText: '$25 VINTAGE',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'shining-magikarp-1st-ed')!,
       ALL_CARDS.find(c => c.id === 'blastoise-ex-151-sir')!,
@@ -822,7 +822,7 @@ export const PACKS: Pack[] = [
     tier: 'standard',
     colorAccent: '#F59E0B',
     badgeText: '$45 POPULAR',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'giratina-v-alt-psa10')!,
       ALL_CARDS.find(c => c.id === 'charizard-holo-celebrations')!,
@@ -845,7 +845,7 @@ export const PACKS: Pack[] = [
     tier: 'standard',
     colorAccent: '#EF4444',
     badgeText: '$100 WEMBY CHASE',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'jordan-1986-fleer-psa9')!,
       ALL_CARDS.find(c => c.id === 'ohtani-bowman-chrome-auto')!,
@@ -870,7 +870,7 @@ export const PACKS: Pack[] = [
     tier: 'high_roller',
     colorAccent: '#8B5CF6',
     badgeText: '$250 MOONBREON',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'moonbreon-vmax-psa10')!,
       ALL_CARDS.find(c => c.id === 'rayquaza-vmax-alt-psa10')!,
@@ -892,7 +892,7 @@ export const PACKS: Pack[] = [
     tier: 'high_roller',
     colorAccent: '#EC4899',
     badgeText: '$500 GOD PACK',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'charizard-151-master-ball-psa10')!,
       ALL_CARDS.find(c => c.id === 'charizard-ex-151-sir-psa10')!,
@@ -915,7 +915,7 @@ export const PACKS: Pack[] = [
     tier: 'high_roller',
     colorAccent: '#6366F1',
     badgeText: '$750 ALT ART CHASE',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'moonbreon-vmax-psa10')!,
       ALL_CARDS.find(c => c.id === 'rayquaza-vmax-alt-psa10')!,
@@ -936,7 +936,7 @@ export const PACKS: Pack[] = [
     tier: 'high_roller',
     colorAccent: '#38BDF8',
     badgeText: '$1,200 PSA 10 SLABS',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'wemby-prizm-silver-psa10')!,
       ALL_CARDS.find(c => c.id === 'luka-doncic-prizm-silver-psa10')!,
@@ -956,7 +956,7 @@ export const PACKS: Pack[] = [
     tier: 'whale',
     colorAccent: '#A855F7',
     badgeText: '$2,500 TROPHY VAULT',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'lillie-extra-battle-bgs10')!,
       ALL_CARDS.find(c => c.id === 'ohtani-bowman-chrome-auto')!,
@@ -976,7 +976,7 @@ export const PACKS: Pack[] = [
     tier: 'whale',
     colorAccent: '#F97316',
     badgeText: '$4,000 VINTAGE APEX',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'lugia-1st-ed-neo-psa10')!,
       ALL_CARDS.find(c => c.id === 'blastoise-1st-ed-psa10')!,
@@ -996,7 +996,7 @@ export const PACKS: Pack[] = [
     tier: 'whale',
     colorAccent: '#EAB308',
     badgeText: '$6,000 APEX GRAIL',
-    packCoverUrl: 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75',
+    packCoverUrl: '/pack-cover.svg',
     items: [
       ALL_CARDS.find(c => c.id === 'charizard-1st-ed-psa10')!,
       ALL_CARDS.find(c => c.id === 'pikachu-illustrator-psa9')!,

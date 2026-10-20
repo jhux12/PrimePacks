@@ -1,53 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Global Safety Net: default-deny all paths
-    match /{document=**} {
-      allow read, write: if false;
+    function signedIn() { return request.auth != null; }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    function admin() { return signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true; }
+    match /packs/{id} { allow read: if true; }
+    match /pack_drafts/{id} { allow read: if admin(); }
+    match /admin_audit/{id} { allow read: if admin(); }
+    match /wallets/{uid} { allow read: if owner(uid) || admin(); }
+    match /fulfillments/{id} { allow read: if admin() || (signedIn() && resource.data.uid == request.auth.uid); }
+    match /users/{uid} {
+      allow read: if owner(uid) || admin();
+      allow create, update: if owner(uid)
+        && request.resource.data.keys().hasOnly(['uid','email','displayName','photoURL','isAnonymous','lastLoginAt','updatedAt'])
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.displayName is string && request.resource.data.displayName.size() <= 100;
+      match /inventory/{id} { allow read: if owner(uid) || admin(); }
+      match /ledger/{id} { allow read: if owner(uid) || admin(); }
+      match /operations/{id} { allow read: if owner(uid) || admin(); }
     }
-
-    function isValidId(id) {
-      return id is string && id.size() >= 1 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    function isValidPackCustomization(data) {
-      return data.keys().hasAll(['packId', 'imageUrl']) &&
-        data.keys().hasOnly(['packId', 'imageUrl', 'updatedAt']) &&
-        data.packId is string && data.packId.size() >= 1 && data.packId.size() <= 64 &&
-        data.packId.matches('^[a-zA-Z0-9_\\-]+$') &&
-        data.imageUrl is string && data.imageUrl.size() >= 8 && data.imageUrl.size() <= 2048;
-    }
-
-    function isValidPackItemsConfig(data) {
-      return data.keys().hasAll(['packId', 'items']) &&
-        data.packId is string && data.packId.size() >= 1 && data.packId.size() <= 64 &&
-        data.packId.matches('^[a-zA-Z0-9_\\-]+$') &&
-        data.items is list;
-    }
-
-    // Public mystery pack customizations (visible across all devices)
-    match /pack_customizations/{packId} {
-      allow read: if true;
-      allow create, update: if isValidId(packId) &&
-                              request.resource.data.packId == packId &&
-                              isValidPackCustomization(request.resource.data);
-      allow delete: if isValidId(packId);
-    }
-
-    // Public mystery pack custom card items (visible across all devices)
-    match /pack_items/{packId} {
-      allow read: if true;
-      allow create, update: if isValidId(packId) &&
-                              request.resource.data.packId == packId &&
-                              isValidPackItemsConfig(request.resource.data);
-      allow delete: if isValidId(packId);
-    }
-
-    // User profile & stats records
-    match /users/{userId} {
-      allow read: if true;
-      allow create, update: if isValidId(userId);
-      allow delete: if isValidId(userId);
-    }
+    // All financial, catalog, stock, audit and fulfillment writes go through authenticated functions.
+    match /{document=**} { allow read, write: if false; }
   }
 }

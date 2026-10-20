@@ -30,7 +30,7 @@ export const CrownFoilPack: React.FC<CrownFoilPackProps> = ({
   const [imgLoaded, setImgLoaded] = useState(true);
 
   // High-resolution authentic Crown Cards gold foil pack image
-  const packImageUrl = pack.packCoverUrl || 'https://www.crowncards.io/_next/image?url=%2Fpacks%2Fgold.png&w=640&q=75';
+  const packImageUrl = pack.packCoverUrl || '/pack-cover.svg';
 
   // Determine pack theme colors and multiplier badge
   const getPackTheme = () => {
