@@ -1,5 +1,5 @@
 .commerce-app {
-  --gold: #e0bb64;
+  --gold: #00f076;
   --ink: #080b11;
   --muted: #9ca5b5;
   min-height: 100vh;
@@ -1083,4 +1083,47 @@
 .admin-tabs {
   overflow-x: auto;
   flex-wrap: wrap;
+}
+
+/* Original PrimePacks stage and compact neon navigation. */
+.original-layout {
+  background: #050509;
+  font-family: "Inter", sans-serif;
+}
+.original-layout .announcement,
+.original-layout .site-footer {
+  display: none;
+}
+.original-layout .site-header {
+  position: relative;
+  z-index: 40;
+  height: 64px;
+  padding: 8px 24px;
+  background: rgba(5, 5, 9, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.original-layout .wallet-button {
+  border-color: #00f07655;
+  background: #00f07612;
+}
+.original-layout .primary-button {
+  background: #00f076;
+  color: #04130a;
+}
+.original-layout main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.original-storefront {
+  line-height: 1.5;
+  font-family: "Inter", sans-serif;
+}
+@media (max-width: 640px) {
+  .original-layout .site-header {
+    height: auto;
+    min-height: 60px;
+    padding: 8px 12px;
+    gap: 8px;
+  }
 }

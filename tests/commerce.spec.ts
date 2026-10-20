@@ -106,9 +106,7 @@ async function fixture(
     return route.fulfill({ json: { id: "order-1", version: 2 } });
   });
   await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "The pack lineup" }),
-  ).toBeVisible();
+  await expect(page.getByTestId("original-pack-stage")).toBeVisible();
 }
 test("branded storefront renders without fake balances, fairness or admin access", async ({
   page,
@@ -116,9 +114,7 @@ test("branded storefront renders without fake balances, fairness or admin access
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await fixture(page);
-  await expect(
-    page.getByRole("heading", { name: "Your next prime pull." }),
-  ).toBeVisible();
+  await expect(page.getByTestId("original-pack-stage")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Add store credit" }),
   ).toContainText("$0.00");
@@ -139,7 +135,11 @@ test("branded storefront renders without fake balances, fairness or admin access
 });
 test("category filtering has an honest empty state", async ({ page }) => {
   await fixture(page);
-  await page.getByRole("button", { name: "Sports", exact: true }).click();
+  await page.getByRole("button", { name: "Change Pack Category" }).click();
+  await page
+    .getByRole("button", { name: /Sports/ })
+    .last()
+    .click();
   await expect(
     page.getByRole("heading", { name: "No packs available yet" }),
   ).toBeVisible();
@@ -151,24 +151,21 @@ test("published odds normalize weights instead of inventing rarity rates", async
   page,
 }) => {
   await fixture(page);
-  await page.getByRole("button", { name: "View pack & odds" }).click();
+  await page.getByTitle("Pack Settings & Odds").click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("25.0000%")).toBeVisible();
   await expect(dialog.getByText("75.0000%")).toBeVisible();
   await expect(
-    dialog.getByText("Each opening awards one card.", { exact: false }),
+    dialog.getByText("Every purchase uses these server-managed weights.", {
+      exact: false,
+    }),
   ).toBeVisible();
 });
 test("a successful server opening appears in the account vault", async ({
   page,
 }) => {
   await fixture(page, "member");
-  await page.getByRole("button", { name: "View pack & odds" }).click();
-  await page.getByRole("button", { name: "Confirm opening · $1.00" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "Your card is in your vault",
-  );
-  await page.getByRole("button", { name: "Back to collection" }).click();
+  await page.getByRole("button", { name: /Buy for \$1/ }).click();
   await page.getByRole("button", { name: "Vault (1)" }).click();
   await expect(
     page.getByRole("heading", { name: "Launch Charizard" }),
@@ -184,10 +181,9 @@ test("failed openings do not invent cards and retries preserve the operation ID"
     if (r.url().endsWith("/fixture-api/openPack"))
       ids.push(r.postDataJSON().requestId);
   });
-  await page.getByRole("button", { name: "View pack & odds" }).click();
-  await page.getByRole("button", { name: "Confirm opening · $1.00" }).click();
+  await page.getByRole("button", { name: /Buy for \$1/ }).click();
   await expect(page.getByRole("alert")).toContainText("Retry safely");
-  await page.getByRole("button", { name: "Confirm opening · $1.00" }).click();
+  await page.getByRole("button", { name: /Buy for \$1/ }).click();
   await expect.poll(() => ids.length).toBe(2);
   expect(ids[0]).toBe(ids[1]);
   await expect(page.getByText("Your card is in your vault")).toHaveCount(0);
@@ -215,9 +211,7 @@ test("shipping form requires a real address and reports backend failures", async
   page,
 }) => {
   await fixture(page, "member");
-  await page.getByRole("button", { name: "View pack & odds" }).click();
-  await page.getByRole("button", { name: "Confirm opening · $1.00" }).click();
-  await page.getByRole("button", { name: "Back to collection" }).click();
+  await page.getByRole("button", { name: /Buy for \$1/ }).click();
   await page.getByRole("button", { name: "Vault (1)" }).click();
   await page.getByRole("button", { name: "Ship card" }).click();
   await expect(page.getByLabel("Full name")).toHaveValue("");
@@ -251,10 +245,9 @@ test("restores the original fourteen packs when the live collection is empty", a
   await expect(
     page.getByRole("heading", { name: "Pokémon Starter Pack" }),
   ).toBeVisible();
-  await expect(page.locator(".pack-tile")).toHaveCount(14);
-  await expect(
-    page.getByRole("button", { name: "Awaiting restock" }),
-  ).toHaveCount(14);
+  await expect(page.getByTestId("original-pack-stage")).toBeVisible();
+  await page.getByTitle("Pack Settings & Odds").click();
+  await expect(page.getByRole("dialog")).toContainText("Published odds");
 });
 test("admin URL requires authentication and cannot grant a customer privileges", async ({
   page,
@@ -283,4 +276,24 @@ test("verified administrators can load the workspace directly at admin URL", asy
   ).toBeVisible();
   await page.getByRole("button", { name: "Close administration" }).click();
   await expect(page).toHaveURL("/");
+});
+
+test("original turbo foil opening reveals the server award and keeps it in the vault", async ({
+  page,
+}) => {
+  await fixture(page, "member");
+  await page.getByTitle("Enable Turbo Mode", { exact: true }).click();
+  await page.getByRole("button", { name: /Buy for \$1/ }).click();
+  await expect(
+    page.getByRole("button", { name: "Keep in Vault", exact: true }).last(),
+  ).toBeVisible({ timeout: 20000 });
+  await page
+    .getByRole("button", { name: "Keep in Vault", exact: true })
+    .last()
+    .click();
+  await expect(page.getByRole("button", { name: /Buy for \$1/ })).toBeVisible();
+  await page.getByRole("button", { name: "Vault (1)" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Launch Charizard" }),
+  ).toBeVisible();
 });

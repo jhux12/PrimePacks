@@ -112,18 +112,20 @@ test("real Firebase purchase, vault reservation, admin fulfillment and customer 
   await expect(
     page.getByRole("button", { name: "Add store credit" }),
   ).toContainText("$10.00");
-  const tile = page.locator("article").filter({
-    has: page.getByRole("heading", { name: "Browser Release Pack" }),
-  });
-  await tile.getByRole("button", { name: "View pack & odds" }).click();
-  await page.getByRole("button", { name: "Confirm opening · $1.00" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "Your card is in your vault",
-  );
+  // Navigate the original carousel; restored baseline packs remain visible too.
+  for (let i = 0; i < 16; i++) {
+    if (
+      await page
+        .getByRole("heading", { name: "Browser Release Pack", exact: true })
+        .isVisible()
+    )
+      break;
+    await page.getByTitle("Next Pack", { exact: true }).click();
+  }
+  await page.getByRole("button", { name: /Buy for \$1 / }).click();
   await expect(
     page.getByRole("button", { name: "Add store credit" }),
   ).toContainText("$9.00");
-  await page.getByRole("button", { name: "Back to collection" }).click();
   await page.getByRole("button", { name: "Vault (1)" }).click();
   await page.getByRole("button", { name: "Ship card" }).click();
   await page.getByLabel("Full name").fill("Local Test Collector");

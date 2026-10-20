@@ -272,7 +272,9 @@ export default function App() {
   }, [adminRoute, isAdmin]);
   const published = packs.filter((p) => p.status === "published");
   return (
-    <div className="commerce-app">
+    <div
+      className={`commerce-app ${tab === "packs" && !adminRoute ? "original-layout" : ""}`}
+    >
       <div className="announcement">
         COLLECT WITH CLARITY{" "}
         <span>Published odds. Real cards. Your next PrimePack.</span>
@@ -430,6 +432,13 @@ export default function App() {
               packs={published}
               balance={wallet.balanceCents / 100}
               onFund={fund}
+              onSellCards={async (items, requestId) => {
+                member();
+                await callApi("sellInventory", {
+                  instanceIds: items.map((i) => i.instanceId),
+                  requestId,
+                });
+              }}
               onOpen={async (pack, quantity, requestId) => {
                 member();
                 const result = await callApi<{ items: InventoryCard[] }>(
